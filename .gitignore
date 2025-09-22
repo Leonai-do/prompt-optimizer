@@ -189,4 +189,6 @@ nul
 .trae
 .cursor/rules/bmad
 CLAUDE.md
-.vscode
+.vscodebackup-original/
+
+backup-original/
