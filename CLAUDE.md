@@ -4,42 +4,63 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Prompt Optimizer is a powerful AI prompt optimization tool that helps write better AI prompts and improve AI output quality. It's built as a monorepo with multiple packages supporting Web, Desktop, Chrome Extension, and Docker deployment.
+Prompt Optimizer is an AI-powered tool for optimizing prompts to improve AI output quality. It supports multiple deployment modes: Web application, Desktop application, Chrome extension, and Docker deployment. The project is built using a monorepo architecture with TypeScript and Vue 3.
 
-## Development Commands
+## Package Manager and Commands
 
-### Essential Commands
+**IMPORTANT**: This project uses `pnpm` as the package manager. Use `pnpm` for all operations, not npm or yarn.
 
-你应该使用 pmpm dev:fresh 清理缓存并重启服务以获得服务的访问地址，并确保最新最可靠的界面体验
+### Development Commands
 
 ```bash
-# Development
-pnpm dev:fresh         # Clean install and restart development 
-pnpm dev:desktop       # Build core/ui, run web and desktop
-pnpm dev:desktop:fresh # Clean install and restart desktop development
+# Install dependencies
+pnpm install
 
-# Building
-pnpm build            # Build all packages (core → ui → web/ext/desktop in parallel)
-pnpm build:core       # Build core package only
-pnpm build:ui         # Build UI components package only
-pnpm build:web        # Build web application only
-pnpm build:desktop    # Build desktop application with packaging
+# Development (Web app)
+pnpm dev               # Build core/ui packages and run web app
+pnpm dev:fresh         # Clean reset: clean + reinstall + dev
+pnpm dev:parallel      # Run UI and WEB in parallel after building core
+
+# Development (Desktop app)
+pnpm dev:desktop       # Build core/ui, run web and desktop in parallel
+pnpm dev:desktop:fresh # Clean reset for desktop development
 
 # Testing
-pnpm test            # Run all tests across packages
-pnpm -F @prompt-optimizer/core test    # Run core package tests
-pnpm -F @prompt-optimizer/ui test      # Run UI package tests
+pnpm test              # Run all tests across packages
+pnpm -F @prompt-optimizer/core test        # Test specific package
+pnpm -F @prompt-optimizer/ui test          # Test UI package
 
-# Maintenance  
-pnpm clean           # Clean dist and vite cache
-pnpm version:sync    # Sync versions across all packages
+# Building
+pnpm build             # Build all packages in dependency order
+pnpm build:core        # Build core package only
+pnpm build:ui          # Build UI package only
+pnpm build:web         # Build web application
+pnpm build:desktop     # Build desktop application (includes packaging)
+
+# Linting
+pnpm lint              # Lint UI package
+pnpm lint:fix          # Fix linting issues
+
+# Cleaning
+pnpm clean             # Clean dist and cache directories
+pnpm clean:dist        # Clean distribution directories
+pnpm clean:vite        # Clean Vite cache
+```
+
+### MCP Server Commands
+
+```bash
+pnpm mcp:build         # Build MCP server package
+pnpm mcp:dev           # Run MCP server in development mode
+pnpm mcp:start         # Start MCP server
+pnpm mcp:test          # Test MCP server
 ```
 
 ### Package-Specific Commands
 
 Use `pnpm -F <package-name>` to run commands in specific packages:
 - `@prompt-optimizer/core` - Core functionality
-- `@prompt-optimizer/ui` - UI components  
+- `@prompt-optimizer/ui` - UI components
 - `@prompt-optimizer/web` - Web application
 - `@prompt-optimizer/extension` - Chrome extension
 - `@prompt-optimizer/desktop` - Desktop application
@@ -49,174 +70,138 @@ Use `pnpm -F <package-name>` to run commands in specific packages:
 
 ### Monorepo Structure
 
-The project follows a strict dependency hierarchy:
-```
-packages/core (foundation)
-    ↓
-packages/ui (components, depends on core)
-    ↓
-packages/web|extension|desktop (applications, depend on ui + core)
-```
+The project uses a monorepo with the following packages:
 
-### Build Order
+- **`@prompt-optimizer/core`**: Core business logic, services, and utilities
+- **`@prompt-optimizer/ui`**: Vue 3 UI components with Naive UI design system
+- **`@prompt-optimizer/web`**: Web application entry point
+- **`@prompt-optimizer/extension`**: Chrome extension
+- **`@prompt-optimizer/desktop`**: Electron desktop application
+- **`@prompt-optimizer/mcp-server`**: Model Context Protocol server
 
-Due to internal dependencies, builds must follow this sequence:
-1. `core` - Core services, types, and business logic
-2. `ui` - Vue components and composables  
-3. `web/extension/desktop` - Final applications (can build in parallel)
+### Build Dependencies
 
-### Key Packages
+Build order is crucial due to dependencies:
+1. **core** → **ui** → **web/extension/desktop** (parallel)
 
-- **`packages/core`**: Contains all business logic, LLM services, model management, template processing, storage services
-- **`packages/ui`**: Vue 3 + TypeScript components, composables, internationalization, theme system
-- **`packages/web`**: Vite-based web application entry point
-- **`packages/desktop`**: Electron desktop application with IPC proxying
-- **`packages/extension`**: Chrome extension with popup interface
+### Key Services Architecture
 
-## Technical Stack
+The core package provides a service-oriented architecture:
 
-- **Frontend**: Vue 3 + TypeScript + Composition API
-- **Build**: Vite + pnpm workspaces
-- **Styling**: TailwindCSS + PostCSS
-- **Testing**: Vitest + Playwright (for MCP testing)
-- **Desktop**: Electron with auto-updater
-- **Internationalization**: Vue-i18n
-- **State Management**: Reactive composables (no Pinia/Vuex)
+- **TemplateManager**: Manages prompt optimization templates
+- **ModelManager**: Handles AI model configurations and API integrations
+- **LLMService**: Provides unified interface for different AI providers (OpenAI, Gemini, DeepSeek, etc.)
+- **HistoryManager**: Manages optimization history and persistence
+- **StorageFactory**: Provides abstracted storage (localStorage, Dexie, file system)
+- **PreferenceService**: User preferences and settings management
+- **CompareService**: Prompt comparison functionality
+- **DataManager**: Import/export and data management
+- **ContextRepo**: Context variables and conversation management
 
-## Core Service Architecture
+### Cross-Platform Support
 
-### Services Layer (`packages/core/src/services/`)
+The application supports multiple environments:
+- **Browser**: Web application with localStorage
+- **Electron**: Desktop with file system storage and native features
+- **Extension**: Chrome extension with limited storage
 
-All services follow a consistent pattern with types, errors, and proxy layers:
-
-- **`llm/`** - LLM API integration (OpenAI, Gemini, DeepSeek, etc.)
-- **`model/`** - Model configuration management with advanced parameters
-- **`prompt/`** - Prompt optimization and custom conversation testing
-- **`template/`** - Template management with CSP-safe processing
-- **`history/`** - Optimization history tracking
-- **`storage/`** - Multi-adapter storage (localStorage, IndexedDB, file system)
-- **`preference/`** - User preferences with cross-platform sync
-
-### Electron Architecture
-
-Desktop app uses **proxy pattern** for service communication:
-- Main process hosts all core services
-- Renderer process uses `*-electron-proxy.ts` files
-- IPC serialization handles complex object passing
-- All business logic remains in shared core services
+Environment detection is handled by `utils/environment.ts`.
 
 ## Development Guidelines
 
-### Working with Services
+### Code Style and Conventions
 
-1. **Core services** should be platform-agnostic
-2. **Electron proxies** handle IPC communication only
-3. **UI composables** provide reactive interfaces to services
-4. Always update both service and proxy when modifying interfaces
+1. **TypeScript**: Strict TypeScript configuration across all packages
+2. **Vue 3**: Composition API with `<script setup>` syntax
+3. **Naive UI**: Primary UI component library
+4. **Internationalization**: Vue I18n for multi-language support
+5. **Error Handling**: Comprehensive error handling with custom error types
 
-### Component Development
+### Testing Requirements
 
-1. Use Vue 3 Composition API exclusively
-2. Follow the theme system using `theme-manager-*` CSS classes
-3. Implement proper TypeScript types
-4. Use composables for business logic, components for presentation only
+- **Unit tests**: Vitest for all packages
+- **Integration tests**: For service interactions
+- **Test coverage**: Aim for comprehensive coverage of core services
+- Run tests before committing: `pnpm test`
 
-### Testing Strategy
+### Key Development Rules (from .cursorrules)
 
-- **Unit tests**: Individual service methods and utilities
-- **Integration tests**: Cross-service workflows and API integrations  
-- **Real API tests**: Limited tests against actual LLM providers
-- **Component tests**: Vue component behavior and rendering
+1. **Environment**: Windows development environment preferred
+2. **Testing**: Run `pnpm test` after any code changes
+3. **Documentation**: Update experience documentation in relevant files
+4. **API Integration**: Use OpenAI-compatible format, keep business logic decoupled
+5. **Error Handling**: Implement comprehensive error handling with user-friendly messages
 
-## Environment Configuration
+### File Structure Patterns
 
-### Local Development
+- Services follow factory pattern with interfaces
+- Electron proxies for cross-process communication
+- Error classes for each service domain
+- Type definitions separated from implementation
 
-Create `.env.local` in project root:
-```env
-VITE_OPENAI_API_KEY=your_openai_api_key
-VITE_GEMINI_API_KEY=your_gemini_api_key
-VITE_DEEPSEEK_API_KEY=your_deepseek_api_key
-# ... other API keys
+## Environment Variables
+
+Key environment variables for development:
+
+```bash
+# API Keys
+VITE_OPENAI_API_KEY=your_openai_key
+VITE_GEMINI_API_KEY=your_gemini_key
+VITE_DEEPSEEK_API_KEY=your_deepseek_key
+VITE_ZHIPU_API_KEY=your_zhipu_key
+VITE_SILICONFLOW_API_KEY=your_siliconflow_key
+
+# Custom Models (unlimited number supported)
+VITE_CUSTOM_API_KEY_suffix=key
+VITE_CUSTOM_API_BASE_URL_suffix=url
+VITE_CUSTOM_API_MODEL_suffix=model_name
+
+# Access Control
+ACCESS_USERNAME=admin
+ACCESS_PASSWORD=your_password
+
+# MCP Server
+MCP_DEFAULT_MODEL_PROVIDER=openai
+MCP_LOG_LEVEL=info
 ```
 
-### Multi-Custom Model Support
+## Deployment Information
 
-The system supports unlimited custom model configurations:
-```env
-VITE_CUSTOM_API_KEY_modelname=api_key
-VITE_CUSTOM_API_BASE_URL_modelname=https://api.example.com/v1
-VITE_CUSTOM_API_MODEL_modelname=model-name
-```
+### Development Branches
 
-## Advanced Features
-
-### Variable Management System
-
-The project includes an advanced variable management system (`packages/ui/src/components/AdvancedTestPanel.vue`):
-- Custom variable CRUD operations
-- Multi-turn conversation management  
-- Variable replacement with preview
-- Missing variable detection and auto-creation
-- Import/export functionality
-
-### Template Processing
-
-Uses CSP-safe template processing (`packages/core/src/services/template/csp-safe-processor.ts`):
-- Prevents XSS attacks
-- Supports variable replacement with `{{variableName}}` syntax
-- Handles both predefined and custom variables
-
-### Storage Architecture
-
-Multi-adapter storage system supports:
-- **Browser**: localStorage for web/extension
-- **Desktop**: File system storage via Electron
-- **Fallback**: Memory storage for testing
-- **IndexedDB**: For large data in browsers
-
-## Branch and Release Management
-
-### Branch Structure
-- `main/master` - Production branch (triggers Vercel deployment)
-- `develop` - Development branch (no Vercel deployment)
-- `feature/*` - Feature branches from develop
+- **`main`**: Production branch (triggers Vercel deployment)
+- **`develop`**: Development branch (no Vercel deployment)
+- **Feature branches**: Created from develop
 
 ### Version Management
+
 ```bash
-# Update version (don't create tags yet)
+# Update version (without git tag)
 pnpm version:prepare patch|minor|major
 
-# Create and push tags (triggers desktop builds)
+# Create and push git tag (triggers desktop build)
 pnpm run version:tag
 pnpm run version:publish
 ```
 
-## Important Notes
+### Platform-specific Notes
 
-### Node.js & Package Manager
-- **Required**: Node.js >= 18, pnpm >= 8
-- **Forbidden**: Do not use npm or yarn (enforced in package.json)
-- Use `pnpm install` and pnpm workspace commands only
+- **Vercel**: Automatic deployment from main branch only
+- **Desktop**: GitHub Actions build triggered by git tags
+- **Docker**: Multi-stage build with nginx serving
+- **Extension**: Chrome Web Store publishing
 
-### Docker Deployment
-- Multi-stage build optimizes image size
-- Supports environment variable injection for API keys
-- Built-in MCP server at `/mcp` endpoint
-- Includes access password protection
+## Common Issues and Solutions
 
-### Desktop Application
-- Auto-updater system with version checking
-- IPC-based architecture with service proxying
-- Cross-platform builds (Windows/macOS/Linux)
-- Supports both installer and portable versions
+1. **CORS Issues**: Use desktop app or deploy to avoid browser CORS restrictions
+2. **Build Failures**: Run `pnpm clean` then `pnpm install` to reset environment
+3. **Test Failures**: Ensure all packages are built before running tests
+4. **Electron Issues**: Use proxy classes for renderer-main process communication
 
-## Documentation Structure
+## Important Files
 
-- `docs/developer/` - Technical documentation and guides
-- `docs/user/` - User-facing documentation and deployment guides  
-- `docs/archives/` - Historical development records and lessons learned
-- `docs/workspace/` - Current project work tracking and reports
-- `docs/testing/` - Testing scenarios and automation guides
-- ui应尽量使用naive ui组件
-- 记住，我们要尽量使用naive ui实现
+- `dev.md`: Detailed development guide with deployment workflows
+- `.cursorrules`: Development rules and conventions
+- `package.json`: Root package with all build scripts
+- `packages/core/src/index.ts`: Core services export
+- `packages/ui/src/index.ts`: UI components export

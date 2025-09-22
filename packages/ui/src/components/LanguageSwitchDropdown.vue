@@ -14,40 +14,39 @@
     >
       <template #icon>
         <svg class="w-5 h-5 language-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- 简洁的地球图标 - 更大更清晰 -->
-          <circle cx="16" cy="16" r="14" 
-                  fill="none" 
-                  stroke="currentColor" 
+          <!-- Clean globe icon - larger and clearer -->
+          <circle cx="16" cy="16" r="14"
+                  fill="none"
+                  stroke="currentColor"
                   stroke-width="2.5"/>
-          
-          <!-- 经线 -->
-          <ellipse cx="16" cy="16" rx="6" ry="14" 
-                   fill="none" 
-                   stroke="currentColor" 
+
+          <!-- Longitude lines -->
+          <ellipse cx="16" cy="16" rx="6" ry="14"
+                   fill="none"
+                   stroke="currentColor"
                    stroke-width="2"/>
-          <ellipse cx="16" cy="16" rx="11" ry="8" 
-                   fill="none" 
-                   stroke="currentColor" 
+          <ellipse cx="16" cy="16" rx="11" ry="8"
+                   fill="none"
+                   stroke="currentColor"
                    stroke-width="2"/>
-          
-          <!-- 纬线 -->
-          <line x1="2" y1="16" x2="30" y2="16" 
-                stroke="currentColor" 
+
+          <!-- Latitude line -->
+          <line x1="2" y1="16" x2="30" y2="16"
+                stroke="currentColor"
                 stroke-width="2"/>
           
-          <!-- 语言符号 - 清晰的 A 字母 -->
-          <text x="21" y="12" 
-                fill="currentColor" 
-                font-family="system-ui, -apple-system" 
-                font-size="8" 
+          <!-- Language symbols -->
+          <text x="21" y="12"
+                fill="currentColor"
+                font-family="system-ui, -apple-system"
+                font-size="8"
                 font-weight="bold">A</text>
-          
-          <!-- 中文符号 - 清晰的"中"字 -->
-          <text x="8" y="25" 
-                fill="currentColor" 
-                font-family="system-ui" 
-                font-size="7" 
-                font-weight="bold">中</text>
+
+          <text x="8" y="25"
+                fill="currentColor"
+                font-family="system-ui"
+                font-size="7"
+                font-weight="bold">E</text>
         </svg>
       </template>
     </NButton>
@@ -57,66 +56,68 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from 'vue'
 import { NButton, NDropdown, type DropdownOption } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 import { i18n } from '../plugins/i18n'
 import { UI_SETTINGS_KEYS } from '@prompt-optimizer/core'
 import { usePreferences } from '../composables/usePreferenceManager'
 import type { AppServices } from '../types/services'
 
-// 服务注入
+// Service injection
 const services = inject<Ref<AppServices | null>>('services')!
 const { setPreference } = usePreferences(services)
+const { t } = useI18n()
 
-// 语言选项配置 - 为未来扩展预留接口
+// Language options configuration - interface reserved for future expansion
 interface LanguageOption {
   key: string
   label: string
   locale: string
 }
 
-const availableLanguages: LanguageOption[] = [
-  {
-    key: 'zh-CN',
-    label: '简体中文',
-    locale: 'zh-CN'
-  },
+const availableLanguages = computed<LanguageOption[]>(() => [
   {
     key: 'en-US',
-    label: 'English',
+    label: t('language.english'),
     locale: 'en-US'
+  },
+  {
+    key: 'es',
+    label: t('language.spanish'),
+    locale: 'es'
   }
-]
+])
 
-// 当前语言计算属性
+// Current language computed property
 const currentLocale = computed(() => i18n.global.locale.value)
 
 const currentLanguageLabel = computed(() => {
-  const current = availableLanguages.find(lang => lang.locale === currentLocale.value)
-  return current ? `切换语言 / Switch Language (${current.label})` : '切换语言 / Switch Language'
+  const current = availableLanguages.value.find(lang => lang.locale === currentLocale.value)
+  return current ? `${t('language.switchLanguage')} (${current.label})` : t('language.switchLanguage')
 })
 
-// 为Naive UI Dropdown创建选项
+// Create options for Naive UI Dropdown
 const dropdownOptions = computed<DropdownOption[]>(() => {
-  return availableLanguages.map(language => ({
+  return availableLanguages.value.map(language => ({
     key: language.key,
     label: language.label
   }))
 })
 
-// 处理语言选择
+// Handle language selection
 const handleLanguageSelect = async (key: string) => {
-  const selectedLanguage = availableLanguages.find(lang => lang.key === key)
+  const selectedLanguage = availableLanguages.value.find(lang => lang.key === key)
   if (!selectedLanguage) return
 
-  // 切换语言
+  // Switch language
   i18n.global.locale.value = selectedLanguage.locale
-  
-  // 保存用户偏好
+
+  // Save user preference
   try {
     await setPreference(UI_SETTINGS_KEYS.PREFERRED_LANGUAGE, selectedLanguage.locale)
     console.log(`[LanguageSwitchDropdown] Language switched to: ${selectedLanguage.label}`)
   } catch (error) {
     console.error('[LanguageSwitchDropdown] Failed to save language preference:', error)
-    // 语言切换仍然生效，只是偏好设置保存失败
+    // Language switch still takes effect, just preference saving failed
   }
 }
 </script>
@@ -132,7 +133,7 @@ const handleLanguageSelect = async (key: string) => {
   transform: scale(1.05);
 }
 
-/* 确保文字在深色主题下也清晰可见 */
+/* Ensure text is clearly visible in dark theme */
 .language-icon text {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

@@ -1,14 +1,14 @@
 import { createI18n } from 'vue-i18n'
 import { ref, type App } from 'vue'
-import zhCN from '../i18n/locales/zh-CN'
 import enUS from '../i18n/locales/en-US'
+import es from '../locales/es.json'
 import { getPreference, setPreference } from '../composables/usePreferenceManager'
 import { UI_SETTINGS_KEYS } from '@prompt-optimizer/core'
 import type { AppServices } from '../types/services'
 
 // 定义支持的语言类型
-type SupportedLocale = 'zh-CN' | 'en-US'
-const SUPPORTED_LOCALES: SupportedLocale[] = ['zh-CN', 'en-US']
+type SupportedLocale = 'en-US' | 'es'
+const SUPPORTED_LOCALES: SupportedLocale[] = ['en-US', 'es']
 
 // 服务引用
 const servicesRef = ref<AppServices | null>(null);
@@ -21,14 +21,15 @@ export function setI18nServices(services: AppServices) {
 // 创建i18n实例
 const i18n = createI18n({
   legacy: false,
-  locale: 'zh-CN' as SupportedLocale,
+  locale: 'en-US' as SupportedLocale,
   fallbackLocale: {
-    'zh-CN': ['en-US'],
+    'en-US': ['es'],
+    'es': ['en-US'],
     'default': ['en-US']
   },
   messages: {
-    'zh-CN': zhCN,
     'en-US': enUS,
+    'es': es,
   }
 })
 
@@ -40,7 +41,7 @@ async function initializeLanguage() {
       return;
     }
 
-    const defaultLocale: SupportedLocale = navigator.language.startsWith('zh') ? 'zh-CN' : 'en-US'
+    const defaultLocale: SupportedLocale = navigator.language.startsWith('es') ? 'es' : 'en-US'
     const savedLanguage = await getPreference(servicesRef, UI_SETTINGS_KEYS.PREFERRED_LANGUAGE, defaultLocale);
 
     if (SUPPORTED_LOCALES.includes(savedLanguage as SupportedLocale)) {
@@ -52,7 +53,7 @@ async function initializeLanguage() {
   } catch (error) {
     console.error('初始化语言设置失败:', error)
     // 降级到默认语言
-    i18n.global.locale.value = 'zh-CN'
+    i18n.global.locale.value = 'en-US'
   }
 }
 

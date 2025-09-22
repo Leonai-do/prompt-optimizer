@@ -1,5 +1,5 @@
 <template>
-  <!-- 仅在Electron环境中显示 -->
+  <!-- Only show in Electron environment -->
   <div v-if="isElectronEnvironment" class="relative">
     <NBadge :show="state.hasUpdate" dot processing>
       <NButton
@@ -27,7 +27,7 @@
       </NButton>
     </NBadge>
 
-    <!-- 更新模态框 -->
+    <!-- Update modal -->
     <UpdaterModal v-model="showModal" />
   </div>
 </template>
@@ -42,16 +42,16 @@ import UpdaterModal from './UpdaterModal.vue'
 
 const { t } = useI18n()
 
-// 环境检测
+// Environment detection
 const isElectronEnvironment = isRunningInElectron()
 
-// 只获取状态用于图标显示，不调用任何方法
+// Only get state for icon display, don't call any methods
 const { state } = useUpdater()
 
-// 模态框显示状态
+// Modal display state
 const showModal = ref(false)
 
-// 切换模态框显示
+// Toggle modal display
 const toggleModal = () => {
   showModal.value = !showModal.value
 }

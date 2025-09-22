@@ -5,9 +5,9 @@
     content-style="padding: 0; height: 100%; max-height: 100%;"
   >
     <NFlex vertical style="height: 100%;">
-      <!-- 统一顶层工具栏 -->
+      <!-- Unified top toolbar -->
       <NFlex v-if="hasToolbar" justify="space-between" align="center">
-        <!-- 左侧：视图控制按钮组 -->
+        <!-- Left: View control button group -->
         <NButtonGroup>
           <NButton 
             @click="internalViewMode = 'render'"
@@ -35,8 +35,8 @@
             {{ t('common.compare') }}
           </NButton>
         </NButtonGroup>
-        
-        <!-- 右侧：操作按钮 -->
+
+        <!-- Right: Action buttons -->
         <NButtonGroup>
           <NButton
             v-if="isActionEnabled('copy')"
@@ -71,7 +71,7 @@
         </NButtonGroup>
       </NFlex>
 
-      <!-- 推理内容区域 -->
+      <!-- Reasoning content area -->
       <NFlex v-if="shouldShowReasoning" style="flex: 0 0 auto;">
         <NCollapse v-model:expanded-names="reasoningExpandedNames" style="width: 100%;">
           <NCollapseItem name="reasoning">
@@ -102,9 +102,9 @@
           </NCollapseItem>
         </NCollapse>
       </NFlex>
-      <!-- 主要内容区域 -->
+      <!-- Main content area -->
       <NFlex vertical style="flex: 1; min-height: 0; max-height: 100%;">
-        <!-- 对比模式 -->
+        <!-- Compare mode -->
         <TextDiffUI v-if="internalViewMode === 'diff' && content && originalContent" 
           :originalText="originalContent"
           :optimizedText="content"
@@ -113,7 +113,7 @@
           style="height: 100%;"
         />
 
-        <!-- 原文模式 -->
+        <!-- Source mode -->
         <NInput v-else-if="internalViewMode === 'source'"
           :value="content"
           @input="handleSourceInput"
@@ -124,7 +124,7 @@
           style="height: 100%;"
         />
 
-        <!-- 渲染模式（默认） -->
+        <!-- Render mode (default) -->
         <NSpace v-else
          style="height: 100%;max-height: 100%;"
          item-style="height: 100%;max-height: 100%;"
@@ -168,29 +168,29 @@ type ActionName = 'fullscreen' | 'diff' | 'copy' | 'edit' | 'reasoning'
 const { t } = useI18n()
 const { copyText } = useClipboard()
 
-// 组件 Props
+// Component Props
 interface Props {
-  // 内容相关
+  // Content related
   content?: string
   originalContent?: string
   reasoning?: string
-  
-  // 显示模式
+
+  // Display mode
   mode: 'readonly' | 'editable'
   reasoningMode?: 'show' | 'hide' | 'auto'
-  
-  // 功能开关
+
+  // Feature switches
   enabledActions?: ActionName[]
-  
-  // 样式配置
+
+  // Style configuration
   height?: string | number
   placeholder?: string
-  
-  // 状态
+
+  // State
   loading?: boolean
   streaming?: boolean
-  
-  // 服务
+
+  // Services
   compareService: ICompareService
 }
 
@@ -205,7 +205,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: ''
 })
 
-// 事件定义
+// Event definitions
 const emit = defineEmits<{
   'update:content': [content: string]
   'update:reasoning': [reasoning: string]
@@ -217,15 +217,15 @@ const emit = defineEmits<{
   'view-change': [mode: 'base' | 'diff']
 }>()
 
-// 内部状态
+// Internal state
 const reasoningContentRef = ref<HTMLDivElement | null>(null)
 const userHasManuallyToggledReasoning = ref(false)
 
-// 新的视图状态机
+// New view state machine
 const internalViewMode = ref<'render' | 'source' | 'diff'>('render')
 const compareResult = ref<CompareResult | undefined>()
 
-// 推理折叠面板状态
+// Reasoning collapse panel state
 const reasoningExpandedNames = ref<string[]>([])
 
 const isActionEnabled = (action: ActionName) => props.enabledActions.includes(action)

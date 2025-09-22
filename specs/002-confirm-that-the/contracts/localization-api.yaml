@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Localization API
+  description: API for managing language translations and user language preferences
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /localization/languages:
+    get:
+      summary: Get available languages
+      description: Returns a list of all available languages in the system
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Language'
+        '500':
+          description: Internal server error
+
+  /localization/translate:
+    get:
+      summary: Get translations for a language
+      description: Returns all translations for a specific language
+      parameters:
+        - name: lang
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ISO 639-1 language code
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '400':
+          description: Bad request - invalid language code
+        '404':
+          description: Language not found
+        '500':
+          description: Internal server error
+
+  /localization/preferences:
+    get:
+      summary: Get user language preferences
+      description: Returns the current user's language preferences
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+    put:
+      summary: Update user language preferences
+      description: Updates the current user's language preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferredLanguage:
+                  type: string
+                  description: ISO 639-1 language code
+              required:
+                - preferredLanguage
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizationSettings'
+        '400':
+          description: Bad request - invalid language code
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    Language:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ISO 639-1 language code
+        name:
+          type: string
+          description: Human-readable language name
+        isDefault:
+          type: boolean
+          description: Whether this is the default language
+        isActive:
+          type: boolean
+          description: Whether this language is active
+      required:
+        - code
+        - name
+        - isDefault
+        - isActive
+
+    LocalizationSettings:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier for the user
+        preferredLanguage:
+          type: string
+          description: User's preferred language code
+        fallbackLanguage:
+          type: string
+          description: Fallback language code
+        isAutoDetected:
+          type: boolean
+          description: Whether the language was automatically detected
+        lastUpdated:
+          type: string
+          format: date-time
+          description: Timestamp of when the settings were last updated
+      required:
+        - preferredLanguage
+        - fallbackLanguage
+        - isAutoDetected
+        - lastUpdated
