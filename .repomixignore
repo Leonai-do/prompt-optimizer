@@ -1,0 +1,12 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+
+.claude/
+.cursor/
+.vscodebackup-original/
+.qwen/
+.husky/
+.github/
+.opencode/

@@ -192,3 +192,10 @@ CLAUDE.md
 .vscodebackup-original/
 
 backup-original/
+node_modules/
+venv/
+.venv/
+env/
+__pycache__/
+dist/
+build/
